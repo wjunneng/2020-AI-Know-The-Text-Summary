@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-from bert4keras.bert import build_bert_model
-from bert4keras.tokenizer import Tokenizer, load_vocab
-from keras.layers import *
+from bert4keras.models import BERT
+from bert4keras.tokenizers import Tokenizer, load_vocab
 from keras import backend as K
 from keras.optimizers import Adam
 from rouge import Rouge
@@ -12,7 +11,7 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import argparse
 
 
-def boolean_string(s):
+def boolean_string(s: str):
     if s not in {'False', 'True', 'false', 'true'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True' or s == 'true'
@@ -98,12 +97,7 @@ def get_model(config_path, checkpoint_path, albert=False, lr=1e-5):
     if albert == True:
         print("Using Albert!")
 
-    model = build_bert_model(
-        config_path=config_path,
-        checkpoint_path=checkpoint_path,
-        application='seq2seq',
-        albert=albert
-    )
+    model = BERT(config_path=config_path, checkpoint_path=checkpoint_path, application='seq2seq', albert=albert)
 
     y_in = model.input[0][:, 1:]  # 目标tokens
     y_mask = model.input[1][:, 1:]
@@ -152,9 +146,9 @@ def gen_sent(s, topk=2):
 
 
 def just_show():
-    if sample_path == None:
+    if args.sample_path is None:
         return
-    with open(sample_path, 'r') as f:
+    with open(args.sample_path, 'r') as f:
         lines = f.readlines()
         for line in lines:
             content = line.split('\t')[1].strip('\n')
@@ -185,8 +179,7 @@ class Evaluate(keras.callbacks.Callback):
             rouge_1 += scores[0]['rouge-1']['f']
             rouge_2 += scores[0]['rouge-2']['f']
             rouge_l += scores[0]['rouge-l']['f']
-            bleu += sentence_bleu(references=[real_title.split(' ')],
-                                  hypothesis=generated_title.split(' '),
+            bleu += sentence_bleu(references=[real_title.split(' ')], hypothesis=generated_title.split(' '),
                                   smoothing_function=self.smooth)
 
         rouge_1 /= total
@@ -214,10 +207,10 @@ topk = args.topk
 
 train_data_path = args.train_data_path
 val_data_path = args.val_data_path
-
-token_dict = load_vocab(dict_path)  # 读取词典
-
-tokenizer = Tokenizer(token_dict, do_lower_case=True)  # 建立分词器
+# 读取词典
+token_dict = load_vocab(dict_path)
+# 建立分词器
+tokenizer = Tokenizer(token_dict, do_lower_case=True)
 
 sep_id = tokenizer.encode('')[0][-1]
 

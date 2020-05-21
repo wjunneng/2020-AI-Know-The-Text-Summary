@@ -13,7 +13,7 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import argparse
 
 
-def boolean_string(s):
+def boolean_string(s: str):
     if s not in {'False', 'True', 'false', 'true'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True' or s == 'true'
