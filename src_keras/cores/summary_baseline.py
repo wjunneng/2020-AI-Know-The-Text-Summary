@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -227,10 +228,9 @@ _tokenizer = Tokenizer(_token_dict, do_lower_case=True)  # 建立临时分词器
 def read_texts():
     txts = [train_data_path, val_data_path]
     for txt in txts:
-        lines = open(txt).readlines()
-        for line in lines:
-            d = line.split('\t')
-            yield d[1][:max_input_len], d[0]
+        data = pd.read_csv(txt, encoding='utf-8')
+        for (article, summarization) in zip(data['article'], data['summarization']):
+            yield article[:max_input_len], summarization
 
 
 def _batch_texts():
