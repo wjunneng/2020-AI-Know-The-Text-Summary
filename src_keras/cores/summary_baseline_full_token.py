@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from bert4keras.models import BERT
-from bert4keras.tokenizers import Tokenizer, load_vocab
+from bert4keras.bert import build_bert_model
+from bert4keras.tokenizer import Tokenizer, load_vocab
 from keras import backend as K
 from keras.optimizers import Adam
 from rouge import Rouge
@@ -97,7 +97,8 @@ def get_model(config_path, checkpoint_path, albert=False, lr=1e-5):
     if albert == True:
         print("Using Albert!")
 
-    model = BERT(config_path=config_path, checkpoint_path=checkpoint_path, application='seq2seq', albert=albert)
+    model = build_bert_model(config_path=config_path, checkpoint_path=checkpoint_path, application='seq2seq',
+                             albert=albert)
 
     y_in = model.input[0][:, 1:]  # 目标tokens
     y_mask = model.input[1][:, 1:]
