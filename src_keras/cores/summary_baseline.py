@@ -21,23 +21,39 @@ def boolean_string(s: str):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--config_path', type=str, required=True, help='BERT配置文件路径')
-parser.add_argument('--checkpoint_path', type=str, required=True, help='BERT权重路径')
-parser.add_argument('--dict_path', type=str, required=True, help='词表路径')
+parser.add_argument('--config_path', type=str, help='BERT配置文件路径')
+parser.add_argument('--checkpoint_path', type=str, help='BERT权重路径')
+parser.add_argument('--dict_path', type=str, help='词表路径')
 parser.add_argument('--albert', default=False, type=boolean_string, required=False, help='是否使用Albert')
 
-parser.add_argument('--train_data_path', type=str, required=True, help='训练集路径')
-parser.add_argument('--val_data_path', type=str, required=True, help='验证集路径')
+parser.add_argument('--train_data_path', type=str, help='训练集路径')
+parser.add_argument('--val_data_path', type=str, help='验证集路径')
 parser.add_argument('--sample_path', type=str, required=False, help='语料样例路径')
 
 parser.add_argument('--epochs', default=5, type=int, required=False, help='训练循环')
 parser.add_argument('--batch_size', default=8, type=int, required=False, help='训练batch_size')
 parser.add_argument('--lr', default=1e-5, type=float, required=False, help='学习率')
 parser.add_argument('--topk', default=2, type=int, required=False, help='解码TopK')
-parser.add_argument('--max_input_len', default=256, type=int, required=False, help='最大输入长度')
+parser.add_argument('--max_input_len', default=512, type=int, required=False, help='最大输入长度')
 parser.add_argument('--max_output_len', default=32, type=int, required=False, help='最大输出长度')
 
 args = parser.parse_args()
+
+# 验证
+# args.dict_path = '../../data/roberta-large-pytorch/vocab.txt'
+# args.config_path = '../../data/roberta-large-pytorch/bert_config.json'
+# args.checkpoint_path = '../../data/roberta-large-pytorch/bert_model.ckpt'
+# args.train_data_path = '../../data/output/train.csv'
+# args.val_data_path = '../../data/output/val.csv'
+# args.sample_path = '../../data/output/sample.csv'
+# args.albert = False
+# args.epochs = 10
+# args.batch_size = 2
+# args.lr = 1e-5
+# args.topk = 1
+# args.max_input_len = 256
+# args.max_output_len = 32
+
 print('args:\n' + args.__repr__())
 
 
@@ -49,23 +65,21 @@ def padding(x):
 
 
 class DataGenerator(keras.utils.Sequence):
-
     # 对于所有数据输入，每个 epoch 取 dataSize 个数据
     # data 为 pandas iterator
     def __init__(self, data_path, batch_size=8):
         print("init")
         self.data_path = data_path
-        data = pd.read_csv(data_path,
-                           sep='\t',
-                           header=None,
-                           )
+        data = pd.read_csv(data_path, sep=',')
+        data = data[['summarization', 'article']]
+
         self.batch_size = batch_size
         self.dataItor = data
         self.data = data.dropna().sample(frac=1)
 
     def __len__(self):
         # 计算每一个epoch的迭代次数
-        return math.floor(len(self.data) / (self.batch_size)) - 1
+        return math.floor(len(self.data) / self.batch_size) - 1
 
     def __getitem__(self, index):
         # 生成每个batch数据
@@ -86,31 +100,33 @@ class DataGenerator(keras.utils.Sequence):
         for a, b in batch.iterrows():
             content_len = len(b[1])
             title_len = len(b[0])
-            if (content_len + title_len > max_input_len):
+            if content_len + title_len > max_input_len:
                 content = b[1][:max_input_len - title_len]
             else:
                 content = b[1]
             x, s = tokenizer.encode(content, b[0])
             batch_x.append(x)
             batch_y.append(s)
+
         return padding(batch_x), padding(batch_y)
 
 
 def get_model(config_path, checkpoint_path, keep_words, albert=False, lr=1e-5):
-    if albert == True:
+    if albert is True:
         print("Using Albert!")
 
-    model = build_bert_model(
-        config_path=config_path,
-        checkpoint_path=checkpoint_path,
-        application='seq2seq',
-        keep_words=keep_words,
-        albert=albert
-    )
+    model = build_bert_model(config_path=config_path,
+                             checkpoint_path=checkpoint_path,
+                             application='seq2seq',
+                             keep_words=keep_words,
+                             albert=albert
+                             )
 
-    y_in = model.input[0][:, 1:]  # 目标tokens
+    # 目标tokens
+    y_in = model.input[0][:, 1:]
     y_mask = model.input[1][:, 1:]
-    y = model.output[:, :-1]  # 预测tokens，预测与目标错开一位
+    # 预测tokens，预测与目标错开一位
+    y = model.output[:, :-1]
 
     # 交叉熵作为loss，并mask掉输入部分的预测
     cross_entropy = K.sparse_categorical_crossentropy(y_in, y)
@@ -127,15 +143,20 @@ def gen_sent(s, topk=2):
     """
     content_len = max_input_len - max_output_len
     token_ids, segment_ids = tokenizer.encode(s[:content_len])
-    target_ids = [[] for _ in range(topk)]  # 候选答案id
-    target_scores = [0] * topk  # 候选答案分数
-    for i in range(max_output_len):  # 强制要求输出不超过max_output_len字
+    # 候选答案id
+    target_ids = [[] for _ in range(topk)]
+    # 候选答案分数
+    target_scores = [0] * topk
+    # 强制要求输出不超过max_output_len字
+    for i in range(max_output_len):
         _target_ids = [token_ids + t for t in target_ids]
         _segment_ids = [segment_ids + [1] * len(t) for t in target_ids]
-        _probas = model.predict([_target_ids, _segment_ids
-                                 ])[:, -1, 3:]  # 直接忽略[PAD], [UNK], [CLS]
-        _log_probas = np.log(_probas + 1e-6)  # 取对数，方便计算
-        _topk_arg = _log_probas.argsort(axis=1)[:, -topk:]  # 每一项选出topk
+        # 直接忽略[PAD], [UNK], [CLS]
+        _probas = model.predict([_target_ids, _segment_ids])[:, -1, 3:]
+        # 取对数，方便计算
+        _log_probas = np.log(_probas + 1e-6)
+        # 每一项选出topk
+        _topk_arg = _log_probas.argsort(axis=1)[:, -topk:]
         _candidate_ids, _candidate_scores = [], []
         for j, (ids, sco) in enumerate(zip(target_ids, target_scores)):
             # 预测第一个字的时候，输入的topk事实上都是同一个，
@@ -145,12 +166,14 @@ def gen_sent(s, topk=2):
             for k in _topk_arg[j]:
                 _candidate_ids.append(ids + [k + 3])
                 _candidate_scores.append(sco + _log_probas[j][k])
-        _topk_arg = np.argsort(_candidate_scores)[-topk:]  # 从中选出新的topk
+        # 从中选出新的topk
+        _topk_arg = np.argsort(_candidate_scores)[-topk:]
         target_ids = [_candidate_ids[k] for k in _topk_arg]
         target_scores = [_candidate_scores[k] for k in _topk_arg]
         best_one = np.argmax(target_scores)
         if target_ids[best_one][-1] == 3:
             return tokenizer.decode(target_ids[best_one])
+
     # 如果max_output_len字都找不到结束符，直接返回
     return tokenizer.decode(target_ids[np.argmax(target_scores)])
 
@@ -189,20 +212,14 @@ class Evaluate(keras.callbacks.Callback):
             rouge_1 += scores[0]['rouge-1']['f']
             rouge_2 += scores[0]['rouge-2']['f']
             rouge_l += scores[0]['rouge-l']['f']
-            bleu += sentence_bleu(references=[real_title.split(' ')],
-                                  hypothesis=generated_title.split(' '),
+            bleu += sentence_bleu(references=[real_title.split(' ')], hypothesis=generated_title.split(' '),
                                   smoothing_function=self.smooth)
 
         rouge_1 /= total
         rouge_2 /= total
         rouge_l /= total
         bleu /= total
-        output = {
-            'rouge-1': rouge_1,
-            'rouge-2': rouge_2,
-            'rouge-l': rouge_l,
-            'bleu': bleu,
-        }
+        output = {'rouge-1': rouge_1, 'rouge-2': rouge_2, 'rouge-l': rouge_l, 'bleu': bleu}
         print(output)
 
 
@@ -221,8 +238,10 @@ topk = args.topk
 train_data_path = args.train_data_path
 val_data_path = args.val_data_path
 
-_token_dict = load_vocab(dict_path)  # 读取词典
-_tokenizer = Tokenizer(_token_dict, do_lower_case=True)  # 建立临时分词器
+# 读取词典
+_token_dict = load_vocab(dict_path)
+# 建立临时分词器
+_tokenizer = Tokenizer(_token_dict, do_lower_case=True)
 
 
 def read_texts():
@@ -261,19 +280,14 @@ def _total_count(result):
 
 
 # 词频统计
-parallel_apply(
-    func=_tokenize_and_count,
-    iterable=tqdm(_batch_texts(), desc=u'构建词汇表中'),
-    workers=10,
-    max_queue_size=500,
-    callback=_total_count,
-)
+parallel_apply(func=_tokenize_and_count, iterable=tqdm(_batch_texts(), desc=u'构建词汇表中'),
+               workers=10, max_queue_size=500, callback=_total_count)
 
 tokens = [(i, j) for i, j in tokens.items() if j >= min_count]
 tokens = sorted(tokens, key=lambda t: -t[1])
 tokens = [t[0] for t in tokens]
-
-token_dict, keep_words = {}, []  # keep_words是在bert中保留的字表
+# keep_words是在bert中保留的字表
+token_dict, keep_words = {}, []
 
 for t in ['[PAD]', '[UNK]', '[CLS]', '[SEP]']:
     token_dict[t] = len(token_dict)
@@ -283,8 +297,8 @@ for t in tokens:
     if t in _token_dict and t not in token_dict:
         token_dict[t] = len(token_dict)
         keep_words.append(_token_dict[t])
-
-tokenizer = Tokenizer(token_dict, do_lower_case=True)  # 建立分词器
+# 建立分词器
+tokenizer = Tokenizer(token_dict, do_lower_case=True)
 
 rouge = Rouge()
 model = get_model(config_path, checkpoint_path, keep_words, args.albert, args.lr)
