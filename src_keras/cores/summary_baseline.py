@@ -226,7 +226,7 @@ class Evaluate(keras.callbacks.Callback):
 config_path = args.config_path
 checkpoint_path = args.checkpoint_path
 dict_path = args.dict_path
-sample_path = args.sample_path
+sample_path = None
 
 min_count = 0
 max_input_len = args.max_input_len

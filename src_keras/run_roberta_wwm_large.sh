@@ -21,8 +21,8 @@ python $CURRENT_DIR/cores/summary_baseline.py \
   --sample_path=$GLUE_DATA_DIR/sample.csv \
   --albert=False \
   --epochs=5 \
-  --batch_size=4 \
+  --batch_size=8 \
   --lr=1e-5 \
   --topk=1 \
-  --max_input_len=512 \
+  --max_input_len=256 \
   --max_output_len=32
