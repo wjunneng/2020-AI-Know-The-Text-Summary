@@ -91,10 +91,10 @@ def convert_examples_to_features(examples, tokenizer, max_length=512, task=None,
 class FaqProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir):
-        return self._create_examples(os.path.join(data_dir, 'part2.csv'))
+        return self._create_examples(os.path.join(data_dir, 'train_local.csv'))
 
     def get_dev_examples(self, data_dir):
-        return self._create_examples(os.path.join(data_dir, 'part3.csv'))
+        return self._create_examples(os.path.join(data_dir, 'val_local.csv'))
 
     def get_labels(self):
         return [1, 2, 3, 4, 5]
@@ -102,7 +102,7 @@ class FaqProcessor(DataProcessor):
     def _create_examples(self, path):
         df = pd.read_csv(path, encoding='utf-8')
         examples = []
-        summary = df['summary'].tolist()
+        summary = df['summarization'].tolist()
         text = df['short_text'].tolist()
         humanlable = df['label'].astype('int').tolist()
 
@@ -343,14 +343,12 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Required parameters
-    parser.add_argument("--data_dir", default=None, type=str, required=True,
+    parser.add_argument("--data_dir", default='../../data/output', type=str,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
 
-    # parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
-    #                     help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(ALL_MODELS))
-    parser.add_argument('--model_path', default='./cache_down', type=str, required=True)
+    parser.add_argument('--model_path', default='../../data/chinese_wwm_pytorch', type=str)
 
-    parser.add_argument("--output_dir", default=None, type=str, required=True,
+    parser.add_argument("--output_dir", default='../../data/output', type=str,
                         help="The output directory where the model predictions and checkpoints will be written.")
 
     ## Other parameters
@@ -410,6 +408,9 @@ def main():
     parser.add_argument('--checkpoint', type=str, default='checkpoint-1000')
 
     args = parser.parse_args()
+    args.do_train = True
+    args.do_show = True
+    args.overwrite_output_dir = args.output_dir
 
     if os.path.exists(args.output_dir) and os.listdir(
             args.output_dir) and args.do_train and not args.overwrite_output_dir:
@@ -489,7 +490,6 @@ def main():
             results.update(result)
 
     if args.do_predict:
-
         tokenizer = BertTokenizer.from_pretrained('bert-base-chinese', cache_dir='./cache_down')
         model = BertForSequenceClassification.from_pretrained(os.path.join(args.output_dir, args.checkpoint))
         model.to(args.device)
