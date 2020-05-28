@@ -26,7 +26,6 @@ from src.nn.data_parallel import DataParallelImbalance
 import src.biunilm.seq2seq_loader as seq2seq_loader
 import torch.distributed as dist
 
-
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
                     level=logging.INFO)
@@ -51,15 +50,15 @@ def main():
 
     # Required parameters
     parser.add_argument("--data_dir",
-                        default='../../data/input',
+                        default='../../data/output',
                         type=str,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
     parser.add_argument("--src_file",
-                        default='train_local_src.csv',
+                        default='train_src.csv',
                         type=str,
                         help="The input data file name.")
     parser.add_argument("--tgt_file",
-                        default='train_local_tgt.csv',
+                        default='train_tgt.csv',
                         type=str,
                         help="The output data file name.")
     parser.add_argument("--bert_model",
@@ -105,11 +104,11 @@ def main():
                         action='store_true',
                         help="Set this flag if you are using an uncased model.")
     parser.add_argument("--train_batch_size",
-                        default=32,
+                        default=8,
                         type=int,
                         help="Total batch size for training.")
     parser.add_argument("--eval_batch_size",
-                        default=64,
+                        default=16,
                         type=int,
                         help="Total batch size for eval.")
     parser.add_argument("--learning_rate",
@@ -330,7 +329,20 @@ def main():
     if args.do_train:
         print("Loading Train Dataset", args.data_dir)
         bi_uni_pipeline = [seq2seq_loader.Preprocess4Seq2seq(args.max_pred, args.mask_prob, list(tokenizer.vocab.keys(
-        )), tokenizer.convert_tokens_to_ids, args.max_seq_length, new_segment_ids=args.new_segment_ids, truncate_config={'max_len_a': args.max_len_a, 'max_len_b': args.max_len_b, 'trunc_seg': args.trunc_seg, 'always_truncate_tail': args.always_truncate_tail}, mask_source_words=args.mask_source_words, skipgram_prb=args.skipgram_prb, skipgram_size=args.skipgram_size, mask_whole_word=args.mask_whole_word, mode="s2s", has_oracle=args.has_sentence_oracle, num_qkv=args.num_qkv, s2s_special_token=args.s2s_special_token, s2s_add_segment=args.s2s_add_segment, s2s_share_segment=args.s2s_share_segment, pos_shift=args.pos_shift)]
+        )), tokenizer.convert_tokens_to_ids, args.max_seq_length, new_segment_ids=args.new_segment_ids,
+                                                             truncate_config={'max_len_a': args.max_len_a,
+                                                                              'max_len_b': args.max_len_b,
+                                                                              'trunc_seg': args.trunc_seg,
+                                                                              'always_truncate_tail': args.always_truncate_tail},
+                                                             mask_source_words=args.mask_source_words,
+                                                             skipgram_prb=args.skipgram_prb,
+                                                             skipgram_size=args.skipgram_size,
+                                                             mask_whole_word=args.mask_whole_word, mode="s2s",
+                                                             has_oracle=args.has_sentence_oracle, num_qkv=args.num_qkv,
+                                                             s2s_special_token=args.s2s_special_token,
+                                                             s2s_add_segment=args.s2s_add_segment,
+                                                             s2s_share_segment=args.s2s_share_segment,
+                                                             pos_shift=args.pos_shift)]
         file_oracle = None
         if args.has_sentence_oracle:
             file_oracle = os.path.join(args.data_dir, 'train.oracle')
@@ -339,7 +351,8 @@ def main():
         fn_tgt = os.path.join(
             args.data_dir, args.tgt_file if args.tgt_file else 'train.tgt')
         train_dataset = seq2seq_loader.Seq2SeqDataset(
-            fn_src, fn_tgt, args.train_batch_size, data_tokenizer, args.max_seq_length, file_oracle=file_oracle, bi_uni_pipeline=bi_uni_pipeline)
+            fn_src, fn_tgt, args.train_batch_size, data_tokenizer, args.max_seq_length, file_oracle=file_oracle,
+            bi_uni_pipeline=bi_uni_pipeline)
         if args.local_rank == -1:
             train_sampler = RandomSampler(train_dataset, replacement=False)
             _batch_size = args.train_batch_size
@@ -347,7 +360,9 @@ def main():
             train_sampler = DistributedSampler(train_dataset)
             _batch_size = args.train_batch_size // dist.get_world_size()
         train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=_batch_size, sampler=train_sampler,
-                                                       num_workers=args.num_workers, collate_fn=seq2seq_loader.batch_list_to_batch_tensors, pin_memory=False)
+                                                       num_workers=args.num_workers,
+                                                       collate_fn=seq2seq_loader.batch_list_to_batch_tensors,
+                                                       pin_memory=False)
 
     # note: args.train_batch_size has been changed to (/= args.gradient_accumulation_steps)
     # t_total = int(math.ceil(len(train_dataset.ex_list) / args.train_batch_size)
@@ -363,8 +378,7 @@ def main():
     # Prepare model
     recover_step = _get_max_epoch_model(args.output_dir)
     cls_num_labels = 2
-    type_vocab_size = 6 + \
-        (1 if args.s2s_add_segment else 0) if args.new_segment_ids else 2
+    type_vocab_size = 6 + (1 if args.s2s_add_segment else 0) if args.new_segment_ids else 2
     num_sentlvl_labels = 2 if args.has_sentence_oracle else 0
     relax_projection = 4 if args.relax_projection else 0
     if args.local_rank not in (-1, 0):
@@ -375,9 +389,15 @@ def main():
         # if _state_dict == None, the parameters are initialized with bert-init
         _state_dict = {} if args.from_scratch else None
         model = BertForPreTrainingLossMask.from_pretrained(
-            args.bert_model, state_dict=_state_dict, num_labels=cls_num_labels, num_rel=0, type_vocab_size=type_vocab_size, config_path=args.config_path, task_idx=3, num_sentlvl_labels=num_sentlvl_labels, max_position_embeddings=args.max_position_embeddings, label_smoothing=args.label_smoothing, fp32_embedding=args.fp32_embedding, relax_projection=relax_projection, new_pos_ids=args.new_pos_ids, ffn_type=args.ffn_type, hidden_dropout_prob=args.hidden_dropout_prob, attention_probs_dropout_prob=args.attention_probs_dropout_prob, num_qkv=args.num_qkv, seg_emb=args.seg_emb)
+            args.bert_model, state_dict=_state_dict, num_labels=cls_num_labels, num_rel=0,
+            type_vocab_size=type_vocab_size, config_path=args.config_path, task_idx=3,
+            num_sentlvl_labels=num_sentlvl_labels, max_position_embeddings=args.max_position_embeddings,
+            label_smoothing=args.label_smoothing, fp32_embedding=args.fp32_embedding, relax_projection=relax_projection,
+            new_pos_ids=args.new_pos_ids, ffn_type=args.ffn_type, hidden_dropout_prob=args.hidden_dropout_prob,
+            attention_probs_dropout_prob=args.attention_probs_dropout_prob, num_qkv=args.num_qkv, seg_emb=args.seg_emb)
         global_step = 0
     else:
+        model_recover = None
         if recover_step:
             logger.info("***** Recover model: %d *****", recover_step)
             model_recover = torch.load(os.path.join(
@@ -392,7 +412,12 @@ def main():
                 args.model_recover_path, map_location='cpu')
             global_step = 0
         model = BertForPreTrainingLossMask.from_pretrained(
-            args.bert_model, state_dict=model_recover, num_labels=cls_num_labels, num_rel=0, type_vocab_size=type_vocab_size, config_path=args.config_path, task_idx=3, num_sentlvl_labels=num_sentlvl_labels, max_position_embeddings=args.max_position_embeddings, label_smoothing=args.label_smoothing, fp32_embedding=args.fp32_embedding, relax_projection=relax_projection, new_pos_ids=args.new_pos_ids, ffn_type=args.ffn_type, hidden_dropout_prob=args.hidden_dropout_prob, attention_probs_dropout_prob=args.attention_probs_dropout_prob, num_qkv=args.num_qkv, seg_emb=args.seg_emb)
+            args.bert_model, state_dict=model_recover, num_labels=cls_num_labels, num_rel=0,
+            type_vocab_size=type_vocab_size, config_path=args.config_path, task_idx=3,
+            num_sentlvl_labels=num_sentlvl_labels, max_position_embeddings=args.max_position_embeddings,
+            label_smoothing=args.label_smoothing, fp32_embedding=args.fp32_embedding, relax_projection=relax_projection,
+            new_pos_ids=args.new_pos_ids, ffn_type=args.ffn_type, hidden_dropout_prob=args.hidden_dropout_prob,
+            attention_probs_dropout_prob=args.attention_probs_dropout_prob, num_qkv=args.num_qkv, seg_emb=args.seg_emb)
     if args.local_rank == 0:
         dist.barrier()
 
@@ -409,7 +434,7 @@ def main():
         except ImportError:
             raise ImportError("DistributedDataParallel")
         model = DDP(model, device_ids=[
-                    args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
+            args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
     elif n_gpu > 1:
         # model = torch.nn.DataParallel(model)
         model = DataParallelImbalance(model)
@@ -469,10 +494,11 @@ def main():
 
         model.train()
         if recover_step:
-            start_epoch = recover_step+1
+            start_epoch = recover_step + 1
         else:
             start_epoch = 1
-        for i_epoch in trange(start_epoch, int(args.num_train_epochs)+1, desc="Epoch", disable=args.local_rank not in (-1, 0)):
+        for i_epoch in trange(start_epoch, int(args.num_train_epochs) + 1, desc="Epoch",
+                              disable=args.local_rank not in (-1, 0)):
             if args.local_rank != -1:
                 train_sampler.set_epoch(i_epoch)
             iter_bar = tqdm(train_dataloader, desc='Iter (loss=X.XXX)',
@@ -481,14 +507,18 @@ def main():
                 batch = [
                     t.to(device) if t is not None else None for t in batch]
                 if args.has_sentence_oracle:
-                    input_ids, segment_ids, input_mask, mask_qkv, lm_label_ids, masked_pos, masked_weights, is_next, task_idx, oracle_pos, oracle_weights, oracle_labels = batch
+                    input_ids, segment_ids, input_mask, mask_qkv, lm_label_ids, masked_pos, masked_weights, is_next, \
+                    task_idx, oracle_pos, oracle_weights, oracle_labels = batch
                 else:
-                    input_ids, segment_ids, input_mask, mask_qkv, lm_label_ids, masked_pos, masked_weights, is_next, task_idx = batch
+                    input_ids, segment_ids, input_mask, mask_qkv, lm_label_ids, masked_pos, masked_weights, is_next, \
+                    task_idx = batch
                     oracle_pos, oracle_weights, oracle_labels = None, None, None
-                loss_tuple = model(input_ids, segment_ids, input_mask, lm_label_ids, is_next, masked_pos=masked_pos, masked_weights=masked_weights, task_idx=task_idx, masked_pos_2=oracle_pos, masked_weights_2=oracle_weights,
+                loss_tuple = model(input_ids, segment_ids, input_mask, lm_label_ids, is_next, masked_pos=masked_pos,
+                                   masked_weights=masked_weights, task_idx=task_idx, masked_pos_2=oracle_pos,
+                                   masked_weights_2=oracle_weights,
                                    masked_labels_2=oracle_labels, mask_qkv=mask_qkv)
                 masked_lm_loss, next_sentence_loss = loss_tuple
-                if n_gpu > 1:    # mean() to average on multi-gpu.
+                if n_gpu > 1:  # mean() to average on multi-gpu.
                     # loss = loss.mean()
                     masked_lm_loss = masked_lm_loss.mean()
                     next_sentence_loss = next_sentence_loss.mean()
@@ -508,9 +538,7 @@ def main():
                 else:
                     loss.backward()
                 if (step + 1) % args.gradient_accumulation_steps == 0:
-                    lr_this_step = args.learning_rate * \
-                        warmup_linear(global_step/t_total,
-                                      args.warmup_proportion)
+                    lr_this_step = args.learning_rate * warmup_linear(global_step / t_total, args.warmup_proportion)
                     if args.fp16:
                         # modify learning rate with special warm up BERT uses
                         for param_group in optimizer.param_groups:
@@ -520,7 +548,7 @@ def main():
                     global_step += 1
 
             # Save a trained model
-            if (args.local_rank == -1 or torch.distributed.get_rank() == 0):
+            if args.local_rank == -1 or torch.distributed.get_rank() == 0:
                 logger.info(
                     "** ** * Saving fine-tuned model and optimizer ** ** * ")
                 model_to_save = model.module if hasattr(
