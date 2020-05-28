@@ -270,9 +270,11 @@ def main():
                         help="Using position shift for fine-tuning.")
 
     args = parser.parse_args()
+    args.do_train = True
+    args.do_eval = True
 
-    assert Path(args.model_recover_path).exists(
-    ), "--model_recover_path doesn't exist"
+    # assert Path(args.model_recover_path).exists(
+    # ), "--model_recover_path doesn't exist"
 
     args.output_dir = args.output_dir.replace(
         '[PT_OUTPUT_DIR]', os.getenv('PT_OUTPUT_DIR', ''))
