@@ -3,7 +3,7 @@ from random import random as rand
 import math
 import torch
 
-from src.cores.loader_utils import get_random_word, batch_list_to_batch_tensors, Pipeline
+from biunilm.loader_utils import get_random_word, batch_list_to_batch_tensors, Pipeline
 
 # Input file format :
 # 1. One sentence per line. These should ideally be actual sentences,
