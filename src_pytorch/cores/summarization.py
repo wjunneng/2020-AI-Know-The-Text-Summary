@@ -45,7 +45,7 @@ def padding(x):
     return np.array([i + [0] * (ml - len(i)) for i in x])
 
 
-def data_generator(tokenizer, batch_size=4, max_output_len=32, max_input_len=450):
+def data_generator(tokenizer, batch_size=4, max_output_len=32, max_input_len=460):
     while True:
         X, S = [], []
         for a, b in read_text(max_input_len, max_output_len):
@@ -116,13 +116,13 @@ def main():
     parser = argparse.ArgumentParser()
 
     # parameters
-    parser.add_argument("--data_dir", default='../../data/train.csv', type=str, required=False, )
+    parser.add_argument("--data_dir", default='../../data/input/train.csv', type=str, required=False, )
     parser.add_argument("--model_name_or_path", default='../../data/chinese_wwm_pytorch', type=str, required=False, )
     parser.add_argument("--output_dir", default='../../data/output', type=str, required=False, )
 
     # Other parameters
     parser.add_argument("--cache_dir", default="", type=str, help="cache dir")
-    parser.add_argument("--max_input_len", default=450, type=int, help="文本最长输入长度")
+    parser.add_argument("--max_input_len", default=460, type=int, help="文本最长输入长度")
     parser.add_argument("--max_output_len", default=32, type=int, help="最长输出摘要长度")
     parser.add_argument("--cut_vocab", default=True, action="store_true", help="是否精简原字表")
     parser.add_argument("--min_count", default=30, type=int, help="精简掉出现频率少于此的word")
@@ -138,14 +138,15 @@ def main():
     parser.add_argument("--max_grad_norm", default=1.0, type=float, help="梯度裁减值")
     parser.add_argument("--num_train_epochs", default=3, type=int, help="训练epochs次数", )
     parser.add_argument("--warmup_steps", default=0, type=int, help="学习率线性预热步数")
-    parser.add_argument("--logging_steps", type=int, default=500, help="每多少步打印日志")
+    parser.add_argument("--logging_steps", type=int, default=1000, help="每多少步打印日志")
     parser.add_argument("--seed", type=int, default=42, help="初始化随机种子")
-    parser.add_argument("--max_steps", default=200000, type=int, help="训练的总步数", )
+    parser.add_argument("--max_steps", default=100000, type=int, help="训练的总步数", )
     parser.add_argument("--save_steps", default=50000, type=int, help="保存的间隔steps", )
 
     args = parser.parse_args()
-    args.do_train = False
+    args.do_train = True
     args.do_show = True
+    args.overwrite_output_dir = args.output_dir
 
     if (
             os.path.exists(args.output_dir) and os.listdir(args.output_dir)
@@ -232,7 +233,8 @@ def main():
         tr_loss, logging_loss = 0.0, 0.0
         model.zero_grad()
         for epoch in train_epochs:
-            for step, batch in enumerate(data_generator(tokenizer, batch_size=args.batch_size,
+            for step, batch in enumerate(data_generator(tokenizer,
+                                                        batch_size=args.batch_size,
                                                         max_output_len=args.max_output_len,
                                                         max_input_len=args.max_input_len)):
                 model.train()
@@ -308,17 +310,13 @@ def main():
             args.output_dir,
             num_labels=[0, 1],
             finetuning_task='unilm',
-            cache_dir='../../data/output',
         )
         # config.keep_words = keep_words
         # config.vocab_size = len(keep_words)
-        model = UniLMModel.from_pretrained(args.output_dir,
-                                           config=config,
-                                           cache_dir='../../data/output')
+        model = UniLMModel.from_pretrained(args.output_dir, config=config, cache_dir='../../data/output')
         model.to(args.device)
 
-        test_data = pd.read_csv('../../data/input/test.csv',
-                                encoding='utf-8')
+        test_data = pd.read_csv('../../data/input/test.csv', encoding='utf-8')
 
         result = []
 
