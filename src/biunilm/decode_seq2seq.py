@@ -45,12 +45,12 @@ def main():
 
     # Required parameters
     parser.add_argument("--bert_model",
-                        default=None,
+                        default='../../data/chinese_wwm_pytorch',
                         type=str,
                         help="Bert pre-trained model selected in the list: bert-base-uncased, "
                              "bert-large-uncased, bert-base-cased, bert-base-multilingual, bert-base-chinese.")
     parser.add_argument("--model_recover_path",
-                        default=None,
+                        default='../../data/log/model.3.bin',
                         type=str,
                         help="The file of fine-tuned pretraining model.")
     parser.add_argument("--max_seq_length",
@@ -79,6 +79,7 @@ def main():
                         action='store_true',
                         help="Whether to use amp for fp16")
     parser.add_argument("--input_file",
+                        default='../../data/output/test_local.csv',
                         type=str,
                         help="Input file")
     parser.add_argument('--subset',
@@ -86,6 +87,7 @@ def main():
                         default=0,
                         help="Decode a subset of the input dataset.")
     parser.add_argument("--output_file",
+                        default='../../data/output/sub.csv',
                         type=str,
                         help="output file")
     parser.add_argument("--split",
@@ -114,7 +116,7 @@ def main():
                         help="Batch size for decoding.")
     parser.add_argument('--beam_size',
                         type=int,
-                        default=1,
+                        default=3,
                         help="Beam size for searching")
     parser.add_argument('--length_penalty',
                         type=float,
@@ -128,7 +130,7 @@ def main():
                         default=None,
                         help="Ignore the word during forbid_duplicate_ngrams")
     parser.add_argument("--min_len",
-                        default=None,
+                        default=20,
                         type=int)
     parser.add_argument('--need_score_traces',
                         action='store_true')
@@ -167,8 +169,7 @@ def main():
     if args.max_tgt_length >= args.max_seq_length - 2:
         raise ValueError("Maximum tgt length exceeds max seq length - 2.")
 
-    device = torch.device(
-        "cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     n_gpu = torch.cuda.device_count()
 
     random.seed(args.seed)
@@ -177,8 +178,7 @@ def main():
     if n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
-    tokenizer = BertTokenizer.from_pretrained(
-        args.bert_model, do_lower_case=args.do_lower_case)
+    tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
 
     tokenizer.max_len = args.max_seq_length
 
@@ -201,8 +201,7 @@ def main():
 
     # Prepare model
     cls_num_labels = 2
-    type_vocab_size = 6 + \
-                      (1 if args.s2s_add_segment else 0) if args.new_segment_ids else 2
+    type_vocab_size = 6 + (1 if args.s2s_add_segment else 0) if args.new_segment_ids else 2
     mask_word_id, eos_word_ids, sos_word_id = tokenizer.convert_tokens_to_ids(
         ["[MASK]", "[SEP]", "[S2S_SOS]"])
 
@@ -308,15 +307,16 @@ def main():
             fn_out = model_recover_path + '.' + args.split
         with open(fn_out, "w", encoding="utf-8") as fout:
             for l in output_lines:
+                l = l.replace(' ', '')
                 fout.write(l)
                 fout.write("\n")
 
-        if args.need_score_traces:
-            with open(fn_out + ".trace.pickle", "wb") as fout_trace:
-                pickle.dump(
-                    {"version": 0.0, "num_samples": len(input_lines)}, fout_trace)
-                for x in score_trace_list:
-                    pickle.dump(x, fout_trace)
+        # if args.need_score_traces:
+        #     with open(fn_out + ".trace.pickle", "wb") as fout_trace:
+        #         pickle.dump(
+        #             {"version": 0.0, "num_samples": len(input_lines)}, fout_trace)
+        #         for x in score_trace_list:
+        #             pickle.dump(x, fout_trace)
 
 
 if __name__ == "__main__":
