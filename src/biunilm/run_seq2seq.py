@@ -5,6 +5,11 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import sys
+
+sys.path.append('/home/wjunneng/Ubuntu/2020-AI-Know-The-Text-Summary')
+os.chdir(sys.path[0])
+
 import logging
 import glob
 import math
@@ -112,7 +117,7 @@ def main():
                         type=int,
                         help="Total batch size for eval.")
     parser.add_argument("--learning_rate",
-                        default=5e-5,
+                        default=2e-5,
                         type=float,
                         help="The initial learning rate for Adam.")
     parser.add_argument("--label_smoothing",
@@ -127,7 +132,7 @@ def main():
                         action='store_true',
                         help="Weight decay to the original weights.")
     parser.add_argument("--num_train_epochs",
-                        default=3.0,
+                        default=10.0,
                         type=float,
                         help="Total number of training epochs to perform.")
     parser.add_argument("--warmup_proportion",
@@ -271,6 +276,22 @@ def main():
     args = parser.parse_args()
     args.do_train = True
     args.do_eval = True
+    args.amp = True
+    args.num_workers = 0
+    args.new_segment_ids = True
+    args.max_seq_length = 512
+    args.max_position_embeddings = 512
+    args.trunc_seg = 'a'
+    args.always_truncate_tail = True
+    args.max_len_b = 72
+    args.mask_prob = 0.7
+    args.max_pred = 72
+    args.train_batch_size = 4
+    args.gradient_accumulation_steps = 1
+    args.learning_rate = 0.00001
+    args.warmup_proportion = 0.1
+    args.label_smoothing = 0.1
+    args.num_train_epochs = 30
 
     # assert Path(args.model_recover_path).exists(
     # ), "--model_recover_path doesn't exist"

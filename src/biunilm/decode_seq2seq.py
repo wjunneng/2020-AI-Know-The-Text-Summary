@@ -12,7 +12,7 @@ from tqdm import tqdm
 import numpy as np
 import torch
 import random
-import pickle
+import pandas as pd
 
 from src.pytorch_pretrained_bert.tokenization import BertTokenizer, WhitespaceTokenizer
 from src.pytorch_pretrained_bert.modeling import BertForSeq2SeqDecoder
@@ -50,7 +50,7 @@ def main():
                         help="Bert pre-trained model selected in the list: bert-base-uncased, "
                              "bert-large-uncased, bert-base-cased, bert-base-multilingual, bert-base-chinese.")
     parser.add_argument("--model_recover_path",
-                        default='../../data/log/model.3.bin',
+                        default='../../data/log/model.10.bin',
                         type=str,
                         help="The file of fine-tuned pretraining model.")
     parser.add_argument("--max_seq_length",
@@ -79,7 +79,7 @@ def main():
                         action='store_true',
                         help="Whether to use amp for fp16")
     parser.add_argument("--input_file",
-                        default='../../data/output/test_local.csv',
+                        default='../../data/output/test.csv',
                         type=str,
                         help="Input file")
     parser.add_argument('--subset',
@@ -116,7 +116,7 @@ def main():
                         help="Batch size for decoding.")
     parser.add_argument('--beam_size',
                         type=int,
-                        default=3,
+                        default=1,
                         help="Beam size for searching")
     parser.add_argument('--length_penalty',
                         type=float,
@@ -162,6 +162,17 @@ def main():
                         help="Do not predict the tokens during decoding.")
 
     args = parser.parse_args()
+    args.amp = True
+    args.new_segment_ids = True
+    args.mode = 's2s'
+    args.need_score_traces = True
+    args.max_seq_length = 512
+    args.max_tgt_length = 72
+    args.batch_size = 16
+    args.beam_size = 1
+    args.length_penalty = 0
+    args.forbid_duplicate_ngrams = True
+    args.forbid_ignore_word = '.'
 
     if args.need_score_traces and args.beam_size <= 1:
         raise ValueError(
@@ -305,18 +316,9 @@ def main():
             fn_out = args.output_file
         else:
             fn_out = model_recover_path + '.' + args.split
-        with open(fn_out, "w", encoding="utf-8") as fout:
-            for l in output_lines:
-                l = l.replace(' ', '')
-                fout.write(l)
-                fout.write("\n")
 
-        # if args.need_score_traces:
-        #     with open(fn_out + ".trace.pickle", "wb") as fout_trace:
-        #         pickle.dump(
-        #             {"version": 0.0, "num_samples": len(input_lines)}, fout_trace)
-        #         for x in score_trace_list:
-        #             pickle.dump(x, fout_trace)
+        result = pd.DataFrame(data={'indexs': range(len(output_lines)), 'text': output_lines})
+        result.to_csv(path_or_buf=fn_out, encoding='utf-8', index=None, header=None)
 
 
 if __name__ == "__main__":
