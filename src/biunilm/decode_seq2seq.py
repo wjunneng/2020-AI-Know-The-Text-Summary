@@ -169,7 +169,7 @@ def main():
     args.max_seq_length = 512
     args.max_tgt_length = 72
     args.batch_size = 16
-    args.beam_size = 1
+    args.beam_size = 2
     args.length_penalty = 0
     args.forbid_duplicate_ngrams = True
     args.forbid_ignore_word = '.'

@@ -38,11 +38,11 @@ class Utils(object):
         删除日期
         """
         post_time = re.search(
-            '(20\d{2}([\.\-/|年月\s]{1,3}\d{1,2}){2}日?(\s?\d{2}:\d{2}(:\d{2})?)?)|(\d{1,2}\s?(分钟|小时|天)前)', text)
+            '(20\d{2}([\.\-/|年月\s]{1,3}\d{1,2}){2}日?(\s?\d{2}:\d{2}(:\d{2})?)?)', text)
 
         while post_time:
             post_time = re.search(
-                '(20\d{2}([\.\-/|年月\s]{1,3}\d{1,2}){2}日?(\s?\d{2}:\d{2}(:\d{2})?)?)|(\d{1,2}\s?(分钟|小时|天)前)', text)
+                '(20\d{2}([\.\-/|年月\s]{1,3}\d{1,2}){2}日?(\s?\d{2}:\d{2}(:\d{2})?)?)', text)
             if post_time is not None:
                 text = text.replace(post_time.group(), '')
             else:
@@ -118,6 +118,20 @@ class Utils(object):
         data['summarization'] = summarizations
         data.to_csv(path_or_buf=output_sub_csv, encoding='utf-8', header=None, index=None)
 
+    @staticmethod
+    def deal_sub_csv(input_sub_csv, output_sub_csv):
+        data = pd.read_csv(input_sub_csv, encoding='utf-8', header=None)
+        data.columns = ['indexs', 'summarization']
+
+        summarizations = []
+        for i in data['summarization']:
+            i = i.replace('[UNK]', '')
+            i = i.replace(' ', '')
+            summarizations.append(i)
+
+        data['summarization'] = summarizations
+        data.to_csv(path_or_buf=output_sub_csv, encoding='utf-8', header=None, index=None)
+
 
 if __name__ == '__main__':
     input_train_csv = '../../data/input/train.csv'
@@ -137,10 +151,12 @@ if __name__ == '__main__':
     #                               output_val_csv=output_val_csv,
     #                               output_test_csv=output_test_csv)
 
-    Utils.generate_train_src_tgt(input_train_csv,
-                                 input_test_csv,
-                                 output_train_src_csv,
-                                 output_train_tgt_csv,
-                                 output_test_csv)
+    # Utils.generate_train_src_tgt(input_train_csv,
+    #                              input_test_csv,
+    #                              output_train_src_csv,
+    #                              output_train_tgt_csv,
+    #                              output_test_csv)
 
     # Utils.delete_date_sub(input_sub_csv=input_sub_csv, output_sub_csv=output_sub_csv)
+
+    Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
