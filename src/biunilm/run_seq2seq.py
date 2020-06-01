@@ -7,9 +7,6 @@ from __future__ import print_function
 import os
 import sys
 
-# sys.path.append('/home/wjunneng/Ubuntu/2020-AI-Know-The-Text-Summary')
-# os.chdir(sys.path[0])
-
 sys.path.append('/content/2020-AI-Know-The-Text-Summary')
 os.chdir(sys.path[0])
 
@@ -521,8 +518,8 @@ def main():
             start_epoch = recover_step + 1
         else:
             start_epoch = 1
-        for i_epoch in trange(start_epoch, int(args.num_train_epochs) + 1, desc="Epoch",
-                              disable=args.local_rank not in (-1, 0)):
+        for i_epoch in range(start_epoch, int(args.num_train_epochs) + 1):
+            print('epochs: {}'.format(i_epoch))
             if args.local_rank != -1:
                 train_sampler.set_epoch(i_epoch)
             iter_bar = tqdm(train_dataloader, desc='Iter (loss=X.XXX)',
@@ -572,7 +569,7 @@ def main():
                     global_step += 1
 
             # Save a trained model
-            if (args.local_rank == -1 or torch.distributed.get_rank() == 0) and (i_epoch % 2 == 0):
+            if (args.local_rank == -1 or torch.distributed.get_rank() == 0) and (i_epoch % 5 == 0):
                 logger.info(
                     "** ** * Saving fine-tuned model and optimizer ** ** * ")
                 model_to_save = model.module if hasattr(
