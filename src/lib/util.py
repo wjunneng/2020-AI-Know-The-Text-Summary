@@ -5,6 +5,12 @@ import pandas as pd
 
 from sklearn.model_selection import train_test_split
 
+import os
+import sys
+
+sys.path.append('/content/2020-AI-Know-The-Text-Summary')
+os.chdir(sys.path[0])
+
 
 class Utils(object):
     @staticmethod

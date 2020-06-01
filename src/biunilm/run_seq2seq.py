@@ -7,7 +7,10 @@ from __future__ import print_function
 import os
 import sys
 
-sys.path.append('/home/wjunneng/Ubuntu/2020-AI-Know-The-Text-Summary')
+# sys.path.append('/home/wjunneng/Ubuntu/2020-AI-Know-The-Text-Summary')
+# os.chdir(sys.path[0])
+
+sys.path.append('/content/2020-AI-Know-The-Text-Summary')
 os.chdir(sys.path[0])
 
 import logging
@@ -286,7 +289,7 @@ def main():
     args.max_len_b = 72
     args.mask_prob = 0.7
     args.max_pred = 72
-    args.train_batch_size = 4
+    args.train_batch_size = 12
     args.gradient_accumulation_steps = 1
     args.learning_rate = 0.00001
     args.warmup_proportion = 0.1
@@ -569,7 +572,7 @@ def main():
                     global_step += 1
 
             # Save a trained model
-            if args.local_rank == -1 or torch.distributed.get_rank() == 0:
+            if (args.local_rank == -1 or torch.distributed.get_rank() == 0) and (i_epoch % 2 == 0):
                 logger.info(
                     "** ** * Saving fine-tuned model and optimizer ** ** * ")
                 model_to_save = model.module if hasattr(
