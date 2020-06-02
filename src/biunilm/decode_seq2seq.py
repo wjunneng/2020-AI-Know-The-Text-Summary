@@ -79,7 +79,7 @@ def main():
                         action='store_true',
                         help="Whether to use amp for fp16")
     parser.add_argument("--input_file",
-                        default='../../data/output/test.csv',
+                        default='../../data/output/test_500.csv',
                         type=str,
                         help="Input file")
     parser.add_argument('--subset',

@@ -1,5 +1,3 @@
-import os
-import sys
 import re
 import pandas as pd
 
@@ -33,7 +31,7 @@ class Utils(object):
         return text
 
     @staticmethod
-    def delete_date(text: str):
+    def delete_date(text: str, left_length: int):
         """
         删除日期
         """
@@ -51,7 +49,7 @@ class Utils(object):
         if len(text) < 510:
             return text
         else:
-            return text[:300] + text[-210:]
+            return text[:left_length] + text[-(510 - left_length):]
 
     @staticmethod
     def generate_train_val_test(input_train_csv, input_test_csv, output_train_csv, output_val_csv, output_test_csv):
@@ -80,7 +78,7 @@ class Utils(object):
 
     @staticmethod
     def generate_train_src_tgt(input_train_csv, input_test_csv, output_train_src_csv, output_train_tgt_csv,
-                               output_test_csv):
+                               output_test_csv, left_length):
         """
         生成训练/测试/验证集
         """
@@ -93,14 +91,16 @@ class Utils(object):
         input_test['article'] = input_test['article'].apply(lambda a: Utils.deal_text(a))
         input_train['summarization'] = input_train['summarization'].apply(lambda a: Utils.deal_text(a))
 
-        input_train['article'] = input_train['article'].apply(lambda a: Utils.delete_date(a))
-        input_test['article'] = input_test['article'].apply(lambda a: Utils.delete_date(a))
+        input_train['article'] = input_train['article'].apply(lambda a: Utils.delete_date(a, left_length=left_length))
+        input_test['article'] = input_test['article'].apply(lambda a: Utils.delete_date(a, left_length=left_length))
 
         input_train.dropna(inplace=True)
 
         input_train['article'].to_csv(output_train_src_csv, index=None, header=None, encoding='utf-8')
         input_train['summarization'].to_csv(output_train_tgt_csv, index=None, header=None, encoding='utf-8')
-        input_test.to_csv(output_test_csv, index=None, header=None, encoding='utf-8')
+        input_test.to_csv(
+            os.path.splitext(output_test_csv)[0] + '_' + str(left_length) + os.path.splitext(output_test_csv)[1],
+            index=None, header=None, encoding='utf-8')
 
     @staticmethod
     def delete_date_sub(input_sub_csv, output_sub_csv):
@@ -112,7 +112,7 @@ class Utils(object):
 
         summarizations = []
         for i in data['summarization']:
-            i = Utils.delete_date(i)
+            i = Utils.delete_date(i, left_length=300)
             summarizations.append(i)
 
         data['summarization'] = summarizations
@@ -155,7 +155,8 @@ if __name__ == '__main__':
     #                              input_test_csv,
     #                              output_train_src_csv,
     #                              output_train_tgt_csv,
-    #                              output_test_csv)
+    #                              output_test_csv,
+    #                              left_length=500)
 
     # Utils.delete_date_sub(input_sub_csv=input_sub_csv, output_sub_csv=output_sub_csv)
 
