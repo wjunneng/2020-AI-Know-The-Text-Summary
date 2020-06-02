@@ -167,7 +167,7 @@ def main():
     args.mode = 's2s'
     args.need_score_traces = True
     args.max_seq_length = 512
-    args.max_tgt_length = 64
+    args.max_tgt_length = 72
     args.batch_size = 16
     args.beam_size = 2
     args.length_penalty = 0

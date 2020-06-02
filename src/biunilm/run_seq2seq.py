@@ -17,7 +17,7 @@ import json
 import argparse
 import random
 from pathlib import Path
-from tqdm import tqdm, trange
+from tqdm import tqdm
 import numpy as np
 import torch
 from torch.utils.data import RandomSampler
@@ -292,9 +292,10 @@ def main():
     args.warmup_proportion = 0.1
     args.label_smoothing = 0.1
     args.num_train_epochs = 30
+    args.model_recover_path = '../../data/log/model.10.bin'
 
-    # assert Path(args.model_recover_path).exists(
-    # ), "--model_recover_path doesn't exist"
+    assert Path(args.model_recover_path).exists(
+    ), "--model_recover_path doesn't exist"
 
     args.output_dir = args.output_dir.replace(
         '[PT_OUTPUT_DIR]', os.getenv('PT_OUTPUT_DIR', ''))

@@ -14,9 +14,9 @@
     batch_size: 12
     epoch: 10
     max_len_b/max_pred/max_tgt_length: 72/72/64
-    score: 
+    score: 36.89
     
     batch_size: 12
     epoch: 10
     max_len_b/max_pred/max_tgt_length: 72/72/52
-    score:        
+    score: 34.8388       
