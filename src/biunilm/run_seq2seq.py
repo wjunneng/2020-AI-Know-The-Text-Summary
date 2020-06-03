@@ -7,8 +7,9 @@ from __future__ import print_function
 import os
 import sys
 
-sys.path.append('/content/2020-AI-Know-The-Text-Summary')
-os.chdir(sys.path[0])
+import pathlib
+
+sys.path.append(str(pathlib.Path(os.path.abspath(__file__)).parent.parent.parent))
 
 import logging
 import glob
@@ -570,7 +571,7 @@ def main():
                     global_step += 1
 
             # Save a trained model
-            if (args.local_rank == -1 or torch.distributed.get_rank() == 0) and (i_epoch % 5 == 0):
+            if (args.local_rank == -1 or torch.distributed.get_rank() == 0) and (i_epoch % 3 == 0):
                 logger.info(
                     "** ** * Saving fine-tuned model and optimizer ** ** * ")
                 model_to_save = model.module if hasattr(

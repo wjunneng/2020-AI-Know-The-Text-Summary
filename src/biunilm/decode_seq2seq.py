@@ -3,6 +3,12 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import os, sys
+import pathlib
+
+sys.path.append(str(pathlib.Path(os.path.abspath(__file__)).parent.parent.parent))
+
+os.chdir(sys.path[0])
 
 import logging
 import glob
@@ -50,7 +56,7 @@ def main():
                         help="Bert pre-trained model selected in the list: bert-base-uncased, "
                              "bert-large-uncased, bert-base-cased, bert-base-multilingual, bert-base-chinese.")
     parser.add_argument("--model_recover_path",
-                        default='../../data/log/model.5.bin',
+                        default='../../data/log/model.24.bin',
                         type=str,
                         help="The file of fine-tuned pretraining model.")
     parser.add_argument("--max_seq_length",
