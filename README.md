@@ -8,21 +8,31 @@
     
     batch_size: 12
     epoch: 10
+    left_length: 300
     max_len_b/max_pred/max_tgt_length: 72/72/72
     score: 37.4359
     
     batch_size: 12
     epoch: 10
+    left_length: 300
     max_len_b/max_pred/max_tgt_length: 72/72/64
     score: 36.89
     
     batch_size: 12
     epoch: 10
+    left_length: 300
     max_len_b/max_pred/max_tgt_length: 72/72/52
     score: 34.8388       
     
     
     batch_size: 12
     epoch: 15
+    left_length: 300
     max_len_b/max_pred/max_tgt_length: 72/72/72    
     score: 39.0763
+    
+    batch_size: 12
+    epoch: 24
+    left_length: 500
+    max_len_b/max_pred/max_tgt_length: 72/72/72    
+    score: 40.6451
