@@ -292,7 +292,7 @@ def main():
     args.warmup_proportion = 0.1
     args.label_smoothing = 0.1
     args.num_train_epochs = 30
-    args.model_recover_path = '../../data/output/model.10.bin'
+    args.model_recover_path = '../../data/output/model.5.bin'
 
     assert Path(args.model_recover_path).exists(
     ), "--model_recover_path doesn't exist"

@@ -151,13 +151,13 @@ if __name__ == '__main__':
     #                               output_val_csv=output_val_csv,
     #                               output_test_csv=output_test_csv)
 
-    # Utils.generate_train_src_tgt(input_train_csv,
-    #                              input_test_csv,
-    #                              output_train_src_csv,
-    #                              output_train_tgt_csv,
-    #                              output_test_csv,
-    #                              left_length=500)
+    Utils.generate_train_src_tgt(input_train_csv=input_train_csv,
+                                 input_test_csv=input_test_csv,
+                                 output_train_src_csv=output_train_src_csv,
+                                 output_train_tgt_csv=output_train_tgt_csv,
+                                 output_test_csv=output_test_csv,
+                                 left_length=500)
 
     # Utils.delete_date_sub(input_sub_csv=input_sub_csv, output_sub_csv=output_sub_csv)
 
-    Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
+    # Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
