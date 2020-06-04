@@ -10,6 +10,7 @@ import sys
 import pathlib
 
 sys.path.append(str(pathlib.Path(os.path.abspath(__file__)).parent.parent.parent))
+os.chdir(sys.path[0])
 
 import logging
 import glob

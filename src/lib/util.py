@@ -8,6 +8,8 @@ import sys
 
 sys.path.append('/content/2020-AI-Know-The-Text-Summary')
 os.chdir(sys.path[0])
+import collections
+import math
 
 
 class Utils(object):
@@ -132,6 +134,23 @@ class Utils(object):
         data['summarization'] = summarizations
         data.to_csv(path_or_buf=output_sub_csv, encoding='utf-8', header=None, index=None)
 
+    @staticmethod
+    def calculate_tgt(input_train_tgt_csv):
+        data = pd.read_csv(input_train_tgt_csv, header=None, encoding='utf-8')
+        data.columns = ['tgt']
+
+        result = {}
+        for i in data['tgt'].values:
+            length = len(i)
+            if length not in result:
+                result[length] = 1
+            else:
+                result[length] += 1
+
+        print(sum(list([k * v for k, v in result.items()])) // sum(list(result.values())))
+        result = collections.OrderedDict(result)
+        print(result)
+
 
 if __name__ == '__main__':
     input_train_csv = '../../data/input/train.csv'
@@ -161,3 +180,5 @@ if __name__ == '__main__':
     # Utils.delete_date_sub(input_sub_csv=input_sub_csv, output_sub_csv=output_sub_csv)
 
     Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
+
+    # Utils.calculate_tgt(output_train_tgt_csv)

@@ -56,7 +56,7 @@ def main():
                         help="Bert pre-trained model selected in the list: bert-base-uncased, "
                              "bert-large-uncased, bert-base-cased, bert-base-multilingual, bert-base-chinese.")
     parser.add_argument("--model_recover_path",
-                        default='../../data/log/model.24.bin',
+                        default='../../data/log/model.27_500_64.bin',
                         type=str,
                         help="The file of fine-tuned pretraining model.")
     parser.add_argument("--max_seq_length",
@@ -173,7 +173,7 @@ def main():
     args.mode = 's2s'
     args.need_score_traces = True
     args.max_seq_length = 512
-    args.max_tgt_length = 72
+    args.max_tgt_length = 64
     args.batch_size = 16
     args.beam_size = 2
     args.length_penalty = 0
