@@ -9,7 +9,7 @@ import sys
 sys.path.append('/content/2020-AI-Know-The-Text-Summary')
 os.chdir(sys.path[0])
 import collections
-import math
+import matplotlib.pyplot as plt
 
 
 class Utils(object):
@@ -137,7 +137,10 @@ class Utils(object):
     @staticmethod
     def calculate_tgt(input_train_tgt_csv):
         data = pd.read_csv(input_train_tgt_csv, header=None, encoding='utf-8')
-        data.columns = ['tgt']
+        if len(data.columns) == 1:
+            data.columns = ['tgt']
+        elif len(data.columns) == 2:
+            data.columns = ['indexes', 'tgt']
 
         result = {}
         for i in data['tgt'].values:
@@ -147,9 +150,14 @@ class Utils(object):
             else:
                 result[length] += 1
 
-        print(sum(list([k * v for k, v in result.items()])) // sum(list(result.values())))
-        result = collections.OrderedDict(result)
-        print(result)
+        print('mean: {}'.format(sum(list([k * v for k, v in result.items()])) // sum(list(result.values()))))
+
+        key_value = {}
+        for key, value in sorted(result.items(), key=lambda x: x[0]):
+            key_value[key] = value
+
+        plt.plot(key_value.keys(), key_value.values(), 's-', color='r', label="ATT-RLSTM")  # s-:方形
+        plt.show()
 
 
 if __name__ == '__main__':
@@ -163,6 +171,7 @@ if __name__ == '__main__':
     output_train_src_csv = '../../data/output/train_src.csv'
     output_train_tgt_csv = '../../data/output/train_tgt.csv'
     output_sub_csv = '../../data/output/sub_delete_time.csv'
+    output_result_csv = '../../data/output/result.csv'
 
     # Utils.generate_train_val_test(input_train_csv=input_train_csv,
     #                               input_test_csv=input_test_csv,
@@ -170,15 +179,16 @@ if __name__ == '__main__':
     #                               output_val_csv=output_val_csv,
     #                               output_test_csv=output_test_csv)
 
-    # Utils.generate_train_src_tgt(input_train_csv=input_train_csv,
-    #                              input_test_csv=input_test_csv,
-    #                              output_train_src_csv=output_train_src_csv,
-    #                              output_train_tgt_csv=output_train_tgt_csv,
-    #                              output_test_csv=output_test_csv,
-    #                              left_length=500)
+    Utils.generate_train_src_tgt(input_train_csv=input_train_csv,
+                                 input_test_csv=input_test_csv,
+                                 output_train_src_csv=output_train_src_csv,
+                                 output_train_tgt_csv=output_train_tgt_csv,
+                                 output_test_csv=output_test_csv,
+                                 left_length=500)
 
     # Utils.delete_date_sub(input_sub_csv=input_sub_csv, output_sub_csv=output_sub_csv)
 
-    Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
+    # Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
 
     # Utils.calculate_tgt(output_train_tgt_csv)
+    # Utils.calculate_tgt(output_result_csv)

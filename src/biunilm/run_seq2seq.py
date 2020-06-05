@@ -285,19 +285,19 @@ def main():
     args.max_position_embeddings = 512
     args.trunc_seg = 'a'
     args.always_truncate_tail = True
-    args.max_len_b = 72
+    args.max_len_b = 52
     args.mask_prob = 0.7
-    args.max_pred = 72
+    args.max_pred = 52
     args.train_batch_size = 12
     args.gradient_accumulation_steps = 1
     args.learning_rate = 0.00001
     args.warmup_proportion = 0.1
     args.label_smoothing = 0.1
     args.num_train_epochs = 30
-    args.model_recover_path = '../../data/output/model.5.bin'
-
-    assert Path(args.model_recover_path).exists(
-    ), "--model_recover_path doesn't exist"
+    # args.model_recover_path = '../../data/output/model.5.bin'
+    #
+    # assert Path(args.model_recover_path).exists(
+    # ), "--model_recover_path doesn't exist"
 
     args.output_dir = args.output_dir.replace(
         '[PT_OUTPUT_DIR]', os.getenv('PT_OUTPUT_DIR', ''))
