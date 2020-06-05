@@ -42,3 +42,9 @@
     left_length: 500
     max_len_b/max_pred/max_tgt_length: 64/64/64  
     score: 40.67
+    
+    batch_size: 12
+    epoch: 33
+    left_length: 500
+    max_len_b/max_pred/max_tgt_length: 64/64/72  
+    score: 41.03
