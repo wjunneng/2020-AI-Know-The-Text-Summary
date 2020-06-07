@@ -56,7 +56,7 @@ def main():
                         help="Bert pre-trained model selected in the list: bert-base-uncased, "
                              "bert-large-uncased, bert-base-cased, bert-base-multilingual, bert-base-chinese.")
     parser.add_argument("--model_recover_path",
-                        default='../../data/log/model.33.bin',
+                        default='../../data/log/model.9.bin',
                         type=str,
                         help="The file of fine-tuned pretraining model.")
     parser.add_argument("--max_seq_length",
