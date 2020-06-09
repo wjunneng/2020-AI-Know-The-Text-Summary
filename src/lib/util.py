@@ -161,7 +161,7 @@ class Utils(object):
 
         summarizations = []
         for i in data['summarization']:
-            i = i.replace('[UNK]', '')
+            i = i.replace('[UNK]', ' ')
             i = i.replace(' ', '')
             summarizations.append(i)
 
@@ -222,14 +222,14 @@ if __name__ == '__main__':
 
     # Utils.calculate_tgt(output_result_csv)
 
-    Utils.generate_train_src_tgt(input_train_csv=input_train_csv,
-                                 input_test_csv=input_test_csv,
-                                 output_train_src_csv=output_train_src_csv,
-                                 output_train_tgt_csv=output_train_tgt_csv,
-                                 output_test_csv=output_test_csv,
-                                 left_length=500)
+    # Utils.generate_train_src_tgt(input_train_csv=input_train_csv,
+    #                              input_test_csv=input_test_csv,
+    #                              output_train_src_csv=output_train_src_csv,
+    #                              output_train_tgt_csv=output_train_tgt_csv,
+    #                              output_test_csv=output_test_csv,
+    #                              left_length=500)
 
-    # Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
+    Utils.deal_sub_csv(input_sub_csv='../../data/output/sub.csv', output_sub_csv='../../data/output/result.csv')
 
 """
 南方都市报2015-05-22<Paragraph>00:00心电图显示龙宝中患有严重的心肌梗塞的症状，但医生的病历本只注明诊断是胆囊炎。南都记者<Paragraph>何永华<Paragraph>摄●5月19日<Paragraph>●南城人民医院南都讯<Paragraph>记者何永华<Paragraph>正在输液治疗胆囊炎，却因心肌梗塞而死。5月19日早上62岁的龙宝中因为下腹疼痛被家人送到南城人民医院，医生并没有将检查出来的心肌梗塞症状写入病历，也没有开治疗心肌梗塞的药，随后老翁因此死亡。家属质疑医院医生存在延误救治。南城医院承认在此事件中医生存在失误，但建议家属走司法程序解决。做了两次心电图<Paragraph>却只写胆囊炎62岁的龙宝中是河南人。生前，龙宝中夫妇被唯一的女儿接到东莞，与女儿女婿一家共同生活。据龙宝中的女婿方先生说，岳父生前患有胃病多年，这些年一直在调养。5月19日凌晨5点多，岳父突然感觉到下腹疼痛。“他原本想忍一忍的，后来实在是痛得难以忍受。在早上6点多，我和我老婆就开车把他送到南城医院。”方先生说。医院的病历本上显示，龙宝中是在5月19日早上6点40分进到南城人民医院急诊室的，给他看病的医生姓秦。方先生说，进到医院后，医生就给岳父开了多项检查。“其中包括心电图以及抽血。”方先生感到诧异的是，做完第一个心电图检查后，医生又给岳父做了个心电图检查。“我们家属又看不懂心电图，所以也不知道结果是什么。”龙宝中的病历本上显示，医生给他的临床诊断是胆囊炎。随后，医生就给他开了治疗胃病的胶囊以及治疗胆囊炎的消炎针剂。“看那个病历本，我以为岳父只是胆囊炎引起腹痛，并没有其他的病症。”方先生说，早上7点左右，他就陪着岳父到输液室里输液。可输了10分钟，他就发现岳父呼吸困难，嘴唇发黑，捂着胸口痛苦不堪。方先生连忙去叫医生。输液十分钟<Paragraph>因心肌梗塞而死医生来到后，连忙将龙宝中推进了抢救室。龙宝中的病历本上显示“患者突发口唇发黑，呼吸减慢，呼之不应。即重，神志不清，口唇发黑，颈动脉搏动消失，心跳过速，心率弱，拟心肌梗死。即予胸外接压，面罩吸氧，转入内科IC<Paragraph>U继续抢救。”方先生说，岳父在重症监护室里抢救了十来分钟，医生就告诉他已经宣告死亡了。“当时还输着液呢。”“治疗胆囊炎怎么会把人给治死呢？”方先生说，事后他拿着岳父的心电图报告和病历本去找其他医院相熟的医生询问，结果别的医生说“心电图显示我岳父当时的病症是患有严重的心肌梗塞症状”。方先生说，整个治疗过程中，医生都没有告诉他这个情况。“不仅没有在病历本上写，更是明知道有心肌梗塞的症状，却没有开具类似救心丸之类的药。”据此，方先生认为，医生发现病情后，没有及时地用药，对他岳父的死亡要承担一定的责任。“如果是早点用药的话，说不定还可以救我岳父一命。”方先生说，这两天他们家属一直在找医院要个说法，但至今都没有。对此，东莞市一所三甲医院急诊科负责人说，心肌梗塞病发得又快又重，及时采取措施的话，还是有生还的可能。“只是种可能。”[医院回应]承认过失<Paragraph>愿意承担责任前日下午，南城人民医院的相关负责人回应称，的确从医生给龙宝中所做的两次心电图检查来看，当时患者是有严重的心肌梗塞的症状。“院方目前还不清楚，医生当时为什么不把这样的症状写进诊疗过程当中去，也的确是没有开具相关治疗心肌梗塞的药。”该负责人说，从这个角度上看，医生存在一定的失误，医院也会根据事态的进展，对当事的医生进行处理。该负责人建议家属走司法途径解决此事。“我们愿意承担责任，但需根据法院的判决来定。”【想看更多新鲜资讯请浏览奥一网（oeeee.com）或关注奥一网官方微信。（微信号：oeeeend）】	
