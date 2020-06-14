@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     # ######################## 全 ########################
     #
-    eda = EDA(index=0)
+    # eda = EDA(index=0)
     #
     # eda = EDA(index=1)
     #
@@ -120,6 +120,6 @@ if __name__ == '__main__':
     #
     # eda = EDA(index=8)
     #
-    # eda = EDA(index=9)
+    eda = EDA(index=9)
 
     eda.eda()
